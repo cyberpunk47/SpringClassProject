@@ -1,7 +1,6 @@
 package com.employee.EMS;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +15,10 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (emsRepository.findByName(employee.getName()).isPresent()) {
             throw new RuntimeException("Employee already exists");
         }
+        if (employee.getAge() < 18 || employee.getAge() > 60) {
+            throw new RuntimeException("Age must be between 18 and 60");
+        }
+
         switch (employee.getDesignation()) {
 
             case PROGRAMMER:
@@ -52,6 +55,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         updateEmp.setName(employee.getName());
         updateEmp.setAge(employee.getAge());
         // updateEmp.setDesignation(employee.getDesignation());
+
         switch (updateEmp.getDesignation()) {
             case PROGRAMMER:
                 updateEmp.setSalary(updateEmp.getSalary() + 5000.0);
@@ -72,6 +76,19 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public List<Employee> getAllEmployees() {
         return emsRepository.findAll();
+    }
+
+    @Override
+    public Employee raiseSalary(Long id, Double percentage) {
+        Employee emp = emsRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("EMPLOYEE_NOT_FOUND"));
+        if ((percentage < 1 || percentage > 100)) {
+            throw new RuntimeException("PERCENTAGE_MUST_IN_RANGE_OF_1_TO_10");
+        }
+        double current = emp.getSalary();
+        Double newSalary = current + (current * percentage / 100);
+        emp.setSalary(newSalary);
+        return emsRepository.save(emp);
     }
 
 }

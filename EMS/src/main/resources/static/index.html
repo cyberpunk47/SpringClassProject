@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management System</title>
+</head>
+<body>
+
+    <h1>Employee Management System</h1>
+    <hr>
+
+    <!-- Navigation Buttons -->
+    <nav>
+        <button onclick="showPage('createPage')">Create Employee</button>
+        <button onclick="showPage('displayPage')">Display All</button>
+        <button onclick="showPage('getPage')">Get Employee</button>
+        <button onclick="showPage('updatePage')">Update Employee</button>
+        <button onclick="showPage('raisePage')">Raise Salary</button>
+        <button onclick="showPage('deletePage')">Delete Employee</button>
+    </nav>
+    <hr>
+
+    <!-- CREATE PAGE -->
+    <div id="createPage" class="page" style="display:none;">
+        <h2>Create Employee</h2>
+        <form id="createForm">
+            <label>Name: <input type="text" id="createName" required></label><br><br>
+            <label>Age (18-60): <input type="number" id="createAge" min="18" max="60" required></label><br><br>
+            <label>Designation:
+                <select id="createDesignation" required>
+                    <option value="PROGRAMMER">PROGRAMMER</option>
+                    <option value="MANAGER">MANAGER</option>
+                    <option value="TESTER">TESTER</option>
+                </select>
+            </label><br><br>
+            <button type="submit">Create</button>
+        </form>
+        <p id="createResult"></p>
+    </div>
+
+    <!-- DISPLAY ALL PAGE -->
+    <div id="displayPage" class="page" style="display:none;">
+        <h2>All Employees</h2>
+        <button id="displayBtn">Load Employees</button>
+        <br><br>
+        <table id="employeeTable" border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Designation</th>
+                    <th>Salary</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- GET EMPLOYEE PAGE -->
+    <div id="getPage" class="page" style="display:none;">
+        <h2>Get Employee by ID</h2>
+        <form id="getForm">
+            <label>Employee ID: <input type="number" id="getId" required></label>
+            <button type="submit">Get</button>
+        </form>
+        <p id="getResult"></p>
+    </div>
+
+    <!-- UPDATE EMPLOYEE PAGE -->
+    <div id="updatePage" class="page" style="display:none;">
+        <h2>Update Employee</h2>
+        <form id="updateForm">
+            <label>Employee ID: <input type="number" id="updateId" required></label><br><br>
+            <label>New Name: <input type="text" id="updateName" required></label><br><br>
+            <label>New Age (18-60): <input type="number" id="updateAge" min="18" max="60" required></label><br><br>
+            <button type="submit">Update</button>
+        </form>
+        <p id="updateResult"></p>
+    </div>
+
+    <!-- RAISE SALARY PAGE -->
+    <div id="raisePage" class="page" style="display:none;">
+        <h2>Raise Salary</h2>
+        <form id="raiseForm">
+            <label>Employee ID: <input type="number" id="raiseId" required></label><br><br>
+            <label>Percentage (1-10): <input type="number" id="raisePercent" min="1" max="10" required></label><br><br>
+            <button type="submit">Raise Salary</button>
+        </form>
+        <p id="raiseResult"></p>
+    </div>
+
+    <!-- DELETE EMPLOYEE PAGE -->
+    <div id="deletePage" class="page" style="display:none;">
+        <h2>Delete Employee</h2>
+        <form id="deleteForm">
+            <label>Employee ID: <input type="number" id="deleteId" required></label>
+            <button type="submit">Delete</button>
+        </form>
+        <p id="deleteResult"></p>
+    </div>
+
+    <script>
+        // Show/hide pages
+        function showPage(pageId) {
+            var pages = document.querySelectorAll('.page');
+            for (var i = 0; i < pages.length; i++) {
+                pages[i].style.display = 'none';
+            }
+            document.getElementById(pageId).style.display = 'block';
+        }
+
+        // Create Employee
+        document.getElementById('createForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var employee = {
+                name: document.getElementById('createName').value,
+                age: parseInt(document.getElementById('createAge').value),
+                designation: document.getElementById('createDesignation').value
+            };
+            fetch('/ems/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(employee)
+            })
+            .then(function(res) {
+                if (!res.ok) throw new Error('Failed to create');
+                return res.json();
+            })
+            .then(function(data) {
+                document.getElementById('createResult').innerText =
+                    'Created: ID=' + data.id + ' | ' + data.name + ' | Age=' + data.age +
+                    ' | ' + data.designation + ' | Salary=' + data.salary;
+            })
+            .catch(function(err) {
+                document.getElementById('createResult').innerText = 'Error: ' + err.message;
+            });
+        });
+
+        // Display All
+        document.getElementById('displayBtn').addEventListener('click', function() {
+            fetch('/ems/display')
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                var tbody = document.querySelector('#employeeTable tbody');
+                tbody.innerHTML = '';
+                data.forEach(function(emp) {
+                    tbody.innerHTML += '<tr>' +
+                        '<td>' + emp.id + '</td>' +
+                        '<td>' + emp.name + '</td>' +
+                        '<td>' + emp.age + '</td>' +
+                        '<td>' + emp.designation + '</td>' +
+                        '<td>' + emp.salary + '</td>' +
+                        '</tr>';
+                });
+            })
+            .catch(function(err) { alert('Error: ' + err.message); });
+        });
+
+        // Get Employee
+        document.getElementById('getForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var id = document.getElementById('getId').value;
+            fetch('/ems/employee/' + id)
+            .then(function(res) {
+                if (!res.ok) throw new Error('Employee not found');
+                return res.json();
+            })
+            .then(function(data) {
+                document.getElementById('getResult').innerText =
+                    'ID: ' + data.id + ' | Name: ' + data.name + ' | Age: ' + data.age +
+                    ' | Designation: ' + data.designation + ' | Salary: ' + data.salary;
+            })
+            .catch(function(err) {
+                document.getElementById('getResult').innerText = 'Error: ' + err.message;
+            });
+        });
+
+        // Update Employee
+        document.getElementById('updateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var id = document.getElementById('updateId').value;
+            var employee = {
+                name: document.getElementById('updateName').value,
+                age: parseInt(document.getElementById('updateAge').value)
+            };
+            fetch('/ems/raise/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(employee)
+            })
+            .then(function(res) {
+                if (!res.ok) throw new Error('Failed to update');
+                return res.json();
+            })
+            .then(function(data) {
+                document.getElementById('updateResult').innerText =
+                    'Updated: ' + data.name + ' | Age=' + data.age + ' | Salary=' + data.salary;
+            })
+            .catch(function(err) {
+                document.getElementById('updateResult').innerText = 'Error: ' + err.message;
+            });
+        });
+
+        // Raise Salary
+        document.getElementById('raiseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var id = document.getElementById('raiseId').value;
+            var percent = parseFloat(document.getElementById('raisePercent').value);
+            fetch('/ems/raise/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(percent)
+            })
+            .then(function(res) {
+                if (!res.ok) throw new Error('Failed to raise salary');
+                return res.json();
+            })
+            .then(function(data) {
+                document.getElementById('raiseResult').innerText =
+                    'Updated: ' + data.name + ' | New Salary: ' + data.salary;
+            })
+            .catch(function(err) {
+                document.getElementById('raiseResult').innerText = 'Error: ' + err.message;
+            });
+        });
+
+        // Delete Employee
+        document.getElementById('deleteForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var id = document.getElementById('deleteId').value;
+            fetch('/ems/delete/' + id, { method: 'DELETE' })
+            .then(function(res) {
+                if (!res.ok) throw new Error('Failed to delete');
+                document.getElementById('deleteResult').innerText = 'Employee ' + id + ' deleted successfully';
+            })
+            .catch(function(err) {
+                document.getElementById('deleteResult').innerText = 'Error: ' + err.message;
+            });
+        });
+    </script>
+
+</body>
+</html>

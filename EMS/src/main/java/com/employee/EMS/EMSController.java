@@ -29,19 +29,19 @@ public class EMSController {
         return employeeService.getAllEmployees();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("employee/{id}")
     public Employee getEmployee(@PathVariable Long id) {
         return employeeService.getEmployee(id);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("delete/{id}")
     public void deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
     }
 
-    @PutMapping("/raise/{id}")
+    @PutMapping("raise/{id}")
     public Employee raiseSalary(@PathVariable Long id,
-            @RequestBody Employee employee) {
-        return employeeService.updateEmployee(id, employee);
+            @RequestBody Double percentage) {
+        return employeeService.raiseSalary(id, percentage);
     }
 }
