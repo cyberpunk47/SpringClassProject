@@ -2,21 +2,23 @@ package com.employee.EMS;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
-    @Autowired
-    private EMSRepository emsRepository;
+    private final EMSRepository emsRepository;
+
+    public EmployeeServiceImpl(EMSRepository emsRepository) {
+        this.emsRepository = emsRepository;
+    }
 
     @Override
     public Employee createEmployee(Employee employee) {
         if (emsRepository.findByName(employee.getName()).isPresent()) {
-            throw new RuntimeException("Employee already exists");
+            throw new CustomException("EMPLOYEE_ALREADY_EXISTS");
         }
         if (employee.getAge() < 18 || employee.getAge() > 60) {
-            throw new RuntimeException("Age must be between 18 and 60");
+            throw new CustomException("Age must be between 18 and 60");
         }
 
         switch (employee.getDesignation()) {
@@ -38,20 +40,20 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Employee getEmployee(Long id) {
-        return emsRepository.findById(id).orElseThrow(() -> new RuntimeException("Employee not found"));
+        return emsRepository.findById(id).orElseThrow(() -> new CustomException("Employee not found"));
 
     }
 
     @Override
     public void deleteEmployee(Long id) {
-        Employee emp = emsRepository.findById(id).orElseThrow(() -> new RuntimeException("Employee not found"));
+        Employee emp = emsRepository.findById(id).orElseThrow(() -> new CustomException("Employee not found"));
         emsRepository.delete(emp);
     }
 
     @Override
     public Employee updateEmployee(Long id, Employee employee) {
         Employee updateEmp = emsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+                .orElseThrow(() -> new CustomException("Employee not found"));
         updateEmp.setName(employee.getName());
         updateEmp.setAge(employee.getAge());
         // updateEmp.setDesignation(employee.getDesignation());
@@ -81,9 +83,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Employee raiseSalary(Long id, Double percentage) {
         Employee emp = emsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("EMPLOYEE_NOT_FOUND"));
+                .orElseThrow(() -> new CustomException("EMPLOYEE_NOT_FOUND"));
         if ((percentage < 1 || percentage > 100)) {
-            throw new RuntimeException("PERCENTAGE_MUST_IN_RANGE_OF_1_TO_10");
+            throw new CustomException("PERCENTAGE_MUST_IN_RANGE_OF_1_TO_10");
         }
         double current = emp.getSalary();
         Double newSalary = current + (current * percentage / 100);
